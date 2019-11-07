@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cronjobber.name" . }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      name: {{ include "cronjobber.name" . }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        name: {{ include "cronjobber.name" . }}
+    spec:
+      serviceAccountName: {{ include "cronjobber.name" . }}
+      securityContext:
+        fsGroup: 2 #daemon
+      volumes:
+        - name: timezonedb
+          emptyDir: {}
+      containers:
+        - name: {{ include "cronjobber.name" . }}
+          image: "{{ .Values.image.cronjobber.repository }}:{{ .Values.image.cronjobber.tag }}"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          args:
+            - --log-level=info
+          volumeMounts:
+            - name: timezonedb
+              mountPath: /usr/share/zoneinfo
+              readOnly: true
+        - name: updatetz
+          image: "{{ .Values.image.updatetz.repository }}:{{ .Values.image.updatetz.tag }}"
+          # NB: the security context configuration below may not work
+          # out of the box on OpenShift
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          volumeMounts:
+            - name: timezonedb
+              mountPath: /tmp/zoneinfo
+              readOnly: false

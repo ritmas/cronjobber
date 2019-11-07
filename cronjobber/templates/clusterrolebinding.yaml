@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "cronjobber.name" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    name: {{ include "cronjobber.name" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "cronjobber.name" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "cronjobber.name" . }}
+    namespace: {{ .Values.namespace }}

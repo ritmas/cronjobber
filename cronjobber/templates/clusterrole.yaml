@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ include "cronjobber.name" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    name: {{ include "cronjobber.name" . }}
+rules:
+  - apiGroups: ['{{ include "cronjobber.name" . }}.hidde.co']
+    resources: ['*']
+    verbs: ['*']
+  - apiGroups: ['batch']
+    resources: ['jobs']
+    verbs: ['*']
+  - apiGroups: ['']
+    resources: ['events']
+    verbs: ['create', 'patch', 'update']
